@@ -1,48 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "history.h"
 
-History *init_history() {
-    History *h = (History *)malloc(sizeof(History));
-    h->head = NULL;
-    h->size = 0;
+History *init_history(void) {
+    History *h = malloc(sizeof(*h));
+    if (!h) return NULL;
+    h->head = NULL; h->size = 0;
     return h;
 }
-
-void add_history(History *h, char *str) {
-    Item *newItem = (Item *)malloc(sizeof(Item));
-    newItem->id = h->size + 1;
-    newItem->str = strdup(str);
-    newItem->next = h->head;
-    h->head = newItem;
-    h->size++;
+int add_history(History *h, const char *str) {
+    if (!h || !str || h->size == INT_MAX) return 0;
+    Item *item = malloc(sizeof(*item));
+    if (!item) return 0;
+    size_t length = strlen(str);
+    item->str = malloc(length + 1);
+    if (!item->str) { free(item); return 0; }
+    memcpy(item->str, str, length + 1);
+    item->id = h->size + 1;
+    item->next = h->head;
+    h->head = item; h->size++;
+    return 1;
 }
-
 char *get_history(History *h, int id) {
-    Item *curr = h->head;
-    while (curr) {
-        if (curr->id == id) return curr->str;
-        curr = curr->next;
-    }
+    if (!h) return NULL;
+    for (Item *item = h->head; item; item = item->next)
+        if (item->id == id) return item->str;
     return NULL;
 }
-
 void print_history(History *h) {
-    Item *curr = h->head;
-    while (curr) {
-        printf("%d: %s\n", curr->id, curr->str);
-        curr = curr->next;
-    }
+    if (!h) return;
+    for (Item *item = h->head; item; item = item->next) printf("%d: %s\n", item->id, item->str);
 }
-
 void free_history(History *h) {
-    Item *curr = h->head;
-    while (curr) {
-        Item *tmp = curr;
-        curr = curr->next;
-        free(tmp->str);
-        free(tmp);
+    if (!h) return;
+    Item *item = h->head;
+    while (item) {
+        Item *next = item->next;
+        free(item->str); free(item); item = next;
     }
     free(h);
 }

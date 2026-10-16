@@ -4,8 +4,9 @@
 #include "tokenizer.h"
 #include "history.h"
 
-int main() {
+int main(void) {
     History *history = init_history();
+    if (!history) { fputs("Unable to allocate history.\n", stderr); return 1; }
     char input[256];
 
     printf("Simple Tokenizer. Type 'exit' to quit.\n");
@@ -28,6 +29,7 @@ int main() {
             if (cmd) {
                 printf("Recalled: %s\n", cmd);
                 char **tokens = tokenize(cmd);
+                if (!tokens) { fputs("Unable to allocate tokens.\n", stderr); free_history(history); return 1; }
                 print_tokens(tokens);
                 free_tokens(tokens);
             } else {
@@ -36,9 +38,14 @@ int main() {
             continue;
         }
 
-        add_history(history, input);
+        if (!add_history(history, input)) {
+            fputs("Unable to save history.\n", stderr);
+            free_history(history);
+            return 1;
+        }
 
         char **tokens = tokenize(input);
+        if (!tokens) { fputs("Unable to allocate tokens.\n", stderr); free_history(history); return 1; }
         print_tokens(tokens);
         free_tokens(tokens);
     }
