@@ -12,8 +12,8 @@ typedef struct {
     int size;
 } History;
 
-History *init_history();
-void add_history(History *h, char *str);
+History *init_history(void);
+int add_history(History *h, const char *str); // 1 on success; 0 leaves history unchanged
 char *get_history(History *h, int id);
 void print_history(History *h);
 void free_history(History *h);
